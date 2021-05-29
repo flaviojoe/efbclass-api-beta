@@ -60,8 +60,6 @@ class CursoViewSet(AssociandoUserRequestMixin, CursoViewSetMixin, ModelViewSet):
 
         categoria = str(filtros.get('filter')[0]).lower()
 
-        print(filtros)
-
         queryset = self.filter_queryset(
             Curso.objects.filter(empresa_id=aluno.empresa_id, categoria__nome__iexact=categoria).select_related(
                 'categoria').all())
@@ -76,9 +74,10 @@ class CursoViewSet(AssociandoUserRequestMixin, CursoViewSetMixin, ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def cursos_por_categoria(self, request, pk=None):
+        aluno = request.user.usuario_aluno
         # queryset = Categoria.objects.prefetch_related('cursos_categoria',
         # 											  'cursos_categoria__criado_por').all()
-        queryset = Curso.objects.select_related('criado_por', 'categoria').filter(categoria_id=pk)
+        queryset = Curso.objects.select_related('criado_por', 'categoria').filter(empresa_id=aluno.empresa_id, categoria_id=pk)
         serializer = CursosPorCategoriaDetailsSerializers(queryset, many=True)
         return Response(serializer.data)
 
