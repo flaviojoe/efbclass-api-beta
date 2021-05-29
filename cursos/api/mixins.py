@@ -146,8 +146,10 @@ class CursoViewSetMixin(object):
 
 class CategoriaViewSetMixin(object):
     def get_queryset(self):
+        aluno = self.request.user.usuario_aluno
+
         return Categoria.objects.prefetch_related('cursos_categoria').filter(
-            cursos_categoria__isnull=False).distinct().all()
+            cursos_categoria__isnull=False, cursos_categoria__empresa_id=aluno.empresa_id).distinct().all()
 
     # return Categoria.objects.prefetch_related('cursos_categoria').select_related('criado_por',
     # 																			 'modificado_por').all()
