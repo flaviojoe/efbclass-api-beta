@@ -13,3 +13,7 @@ class Configuracao(Timestamps, AuditModel):
 	class Meta:
 		verbose_name = 'Configuração'
 		verbose_name_plural = 'Configurações'
+
+
+class Preferencia(Timestamps, AuditModel):
+	modo_escuro = models.BooleanField(default=False, verbose_name='ativar modo escuro')

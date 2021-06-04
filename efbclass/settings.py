@@ -9,8 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Lendo configurações do .env
 env = environ.Env(DEBUG=(bool, False))
-# env_file = os.path.join(BASE_DIR, ".env.exemplo")
-env_file = os.path.join(BASE_DIR, ".env.dev")
+env_file = os.path.join(BASE_DIR, ".env.exemplo")
+# env_file = os.path.join(BASE_DIR, ".env.dev")
 environ.Env.read_env(env_file)
 
 SECRET_KEY = env('SECRET_KEY')
@@ -216,19 +216,19 @@ if VIMEO_HABILITADO:
     VIMEO_CACHE_BACKEND = 'default'
 
 # Redis Django-Redis
-# if REDIS_CACHE:
-#     CACHES = {
-#         "default": {
-#             "BACKEND": "django_redis.cache.RedisCache",
-#             "LOCATION": "redis://127.0.0.1:6379/1",
-#             "OPTIONS": {
-#                         "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#             },
-#             "KEY_PREFIX": "efbclass"
-#         }
-#     }
-#     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-#     SESSION_CACHE_ALIAS = 'default'
+if REDIS_CACHE:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://127.0.0.1:6379/1",
+            "OPTIONS": {
+                        "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+            "KEY_PREFIX": "efbclass"
+        }
+    }
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
 
 
 # S3
