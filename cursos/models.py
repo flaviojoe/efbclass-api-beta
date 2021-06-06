@@ -63,7 +63,7 @@ class Aula(Timestamps, AuditModel):
     titulo = models.CharField(max_length=100)
     url = models.URLField('Link do vídeo', blank=True, help_text='O link pode ser do Youtube ou Vimeo')
     numero = models.IntegerField()
-    video = fields.VimeoField(blank=True, null=True, storage=VimeoFileStorage, help_text='Enviar para o Vimeo')
+    video = fields.VimeoField(blank=True, null=True, storage=VimeoFileStorage, help_text='Enviar para o Vimeo - Teste')
     arquivo_video = models.FileField(upload_to='aulas_video', blank=True, null=True,
                                      help_text='Enviar para o Storage padrão')
 
