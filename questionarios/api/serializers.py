@@ -135,3 +135,16 @@ class ProvaDetailsSerializers(AuditFieldsSerializersMixin, serializers.ModelSeri
 
     def get_qtd_respostas_certas(self, obj):
         return obj.prova_aluno.filter(e_correta=True).count()
+
+
+class RelatorioProvasAlunosSerializers(serializers.Serializer):
+    id = serializers.IntegerField()
+    id_prova = serializers.IntegerField()
+    login = serializers.CharField(max_length=50)
+    nome = serializers.CharField(max_length=60, allow_null=True)
+    finalizado = serializers.BooleanField()
+    curso_id = serializers.IntegerField()
+    curso = serializers.CharField(max_length=150, allow_null=True)
+    empresa_id = serializers.IntegerField()
+    empresa = serializers.CharField(max_length=100, allow_null=True)
+    acertos = serializers.IntegerField()

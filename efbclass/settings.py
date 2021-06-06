@@ -9,8 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Lendo configurações do .env
 env = environ.Env(DEBUG=(bool, False))
-env_file = os.path.join(BASE_DIR, ".env.exemplo")
-# env_file = os.path.join(BASE_DIR, ".env.dev")
+#env_file = os.path.join(BASE_DIR, ".env.exemplo")
+env_file = os.path.join(BASE_DIR, ".env.dev")
 environ.Env.read_env(env_file)
 
 SECRET_KEY = env('SECRET_KEY')
