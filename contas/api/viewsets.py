@@ -74,6 +74,7 @@ class LoginView(KnoxLoginView):
             'token': token
         }
         usuario = User.objects.prefetch_related('usuario_aluno', 'groups').get(id=request.user.id)
+        # preferencia =
         data["user"] = UsuarioSerializers(
             usuario,
             context=self.get_context()

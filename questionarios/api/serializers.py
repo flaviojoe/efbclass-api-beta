@@ -146,5 +146,5 @@ class RelatorioProvasAlunosSerializers(serializers.Serializer):
     curso_id = serializers.IntegerField()
     curso = serializers.CharField(max_length=150, allow_null=True)
     empresa_id = serializers.IntegerField()
-    empresa = serializers.CharField(max_length=100, allow_null=True)
+    empresa_nome = serializers.CharField(max_length=100, allow_null=True)
     acertos = serializers.IntegerField()

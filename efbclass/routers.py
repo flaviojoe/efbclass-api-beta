@@ -1,8 +1,9 @@
 from rest_framework import routers
 
-from core.api.viewsets import RankViewSet
 from alunos.api.viewsets import AlunoViewSet
-from cursos.api.viewsets import CursoViewSet, CategoriaViewSet, HistoricoAulaViewset, MatriculaCursoViewSet, TopicosViewSet
+from core.api.viewsets import RankViewSet
+from cursos.api.viewsets import CursoViewSet, CategoriaViewSet, HistoricoAulaViewset, MatriculaCursoViewSet, \
+    TopicosViewSet
 from empresas.api.viewsets import EmpresaViewSet
 from faqs.api.viewsets import FAQViewSet
 from materiais.api.viewsets import MaterialViewSet

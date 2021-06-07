@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+
 from core.mixins import AssociandoUserRequestMixin
 from .mixins import AlunoFotoPerfilUpdateViewMixin, AlunoViewSetMixin
 from .serializers import AlunoSerializers

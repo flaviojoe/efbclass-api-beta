@@ -27,6 +27,7 @@ class Aluno(Timestamps, AuditModel):
 	equipe = models.ForeignKey(Equipe, on_delete=models.CASCADE, null=True, blank=True, related_name='equipe_aluno')
 	regional = models.ForeignKey(Regional, on_delete=models.CASCADE, null=True, blank=True,
 								 related_name='regional_aluno')
+	modo_escuro = models.BooleanField(default=False, verbose_name='ativar modo escuro')
 
 	def __str__(self):
 		return self.nome

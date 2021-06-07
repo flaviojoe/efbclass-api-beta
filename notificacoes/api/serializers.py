@@ -21,3 +21,14 @@ class NotificacaoDestinatarioSerializers(AuditFieldsSerializersMixin, serializer
     class Meta:
         model = NotificacaoDestinatario
         fields = ['id', 'notificacao', 'is_empresa', 'is_curso', 'is_usuario', 'criado_em']
+
+
+class NotificacoesDoUsuarioSerializers(serializers.Serializer):
+    id = serializers.IntegerField()
+    mensagem = serializers.CharField()
+    criado_por_nome = serializers.CharField(max_length=50)
+    is_empresa = serializers.BooleanField()
+    is_curso = serializers.BooleanField()
+    is_usuario = serializers.BooleanField()
+    criado_em = serializers.DateTimeField()
+    possui_imagem = serializers.BooleanField()

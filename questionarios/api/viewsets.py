@@ -44,7 +44,7 @@ class ProvaViewset(AssociandoUserRequestMixin, ProvaViewsetMixin, ModelViewSet):
                 c.curso_id,
                 d.nome as curso,
                 a.empresa_id,
-                f.nome as empresa,
+                f.nome as empresa_nome,
                 sum(CASE e_correta WHEN true THEN 1	ELSE 0 END) acertos
                 
                 FROM public.alunos_aluno a
@@ -68,6 +68,7 @@ class ProvaViewset(AssociandoUserRequestMixin, ProvaViewsetMixin, ModelViewSet):
             serializer = RelatorioProvasAlunosSerializers(queryset, many=True)
             return Response(serializer.data)
         except Exception as ex:
+            print(ex)
             return Response(respostaErro([], 'Erro ao gerar relatório'))
 
 
