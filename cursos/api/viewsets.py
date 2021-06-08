@@ -75,8 +75,6 @@ class CursoViewSet(AssociandoUserRequestMixin, CursoViewSetMixin, ModelViewSet):
     @action(detail=True, methods=['get'])
     def cursos_por_categoria(self, request, pk=None):
         aluno = request.user.usuario_aluno
-        # queryset = Categoria.objects.prefetch_related('cursos_categoria',
-        # 											  'cursos_categoria__criado_por').all()
         queryset = Curso.objects.select_related('criado_por', 'categoria').filter(empresa_id=aluno.empresa_id, categoria_id=pk)
         serializer = CursosPorCategoriaDetailsSerializers(queryset, many=True)
         return Response(serializer.data)

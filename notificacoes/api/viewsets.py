@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie
 from knox.auth import TokenAuthentication
+from rest_framework import filters
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.pagination import PageNumberPagination
 
 from core.mixins import AssociandoUserRequestMixin
 from .mixins import NotificacaoUsuarioViewSetMixin
 from .serializers import NotificacaoSerializers, NotificacoesDoUsuarioSerializers
 from ..models import Notificacao
+from ..queries import get_notificacoes, get_notificacoes_filter
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class NotificacaoUsuarioViewSet(AssociandoUserRequestMixin, NotificacaoUsuarioViewSetMixin, ModelViewSet):
@@ -20,34 +26,28 @@ class NotificacaoUsuarioViewSet(AssociandoUserRequestMixin, NotificacaoUsuarioVi
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     serializer_class = NotificacaoSerializers
     queryset = Notificacao.objects.select_related('criado_por').all()
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('mensagem')
+    pagination_class = StandardResultsSetPagination
 
-    # @method_decorator(cache_page(60 * 15))
-    # @method_decorator(vary_on_cookie)
-    def notifacacoes_do_usuario(self, request):
+    def notifacacoes_do_usuario(self, request, filter):
         usuario = request.user
-        queryset = Notificacao.objects.raw('''
-        select a.id,
-        a.mensagem,
-        (c.first_name || ' ' || c.last_name) criado_por_nome,
-        b.is_empresa,
-        b.is_curso,
-        b.is_usuario,
-        a.criado_em,
-        case when a.imagem <> '' then true else false end possui_imagem
-        from notificacoes_notificacao a
-        inner join notificacoes_notificacaodestinatario b ON b.notificacao_id = a.id
-        inner join auth_user c on a.criado_por_id = c.id
-        where a.criado_em >= current_date - 30
-        and (
-            b.destinario_id = %s
-            or b.curso_id in (
-                select id from cursos_matricula cm where cm.usuario_id = %s
-            )
-            or b.empresa_id = (select empresa_id from alunos_aluno aa where aa.usuario_id = %s)
-        )
-        ''', [usuario.pk, usuario.pk, usuario.pk])
-        serializer = NotificacoesDoUsuarioSerializers(queryset, many=True)
-        return Response(serializer.data)
+        if filter:
+            print('Filter => ', filter)
+            queryset = Notificacao.objects.raw(get_notificacoes_filter(), [usuario.pk, usuario.pk, usuario.pk, '%' + filter.lower() + '%'])
+            return queryset
+        queryset = Notificacao.objects.raw(get_notificacoes(), [usuario.pk, usuario.pk, usuario.pk])
+        return queryset
 
     def list(self, request, *args, **kwargs):
-        return self.notifacacoes_do_usuario(request)
+        filtro = request.GET.get('filter')
+        queryset = self.notifacacoes_do_usuario(request, filtro)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = NotificacoesDoUsuarioSerializers(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+        # return self.notifacacoes_do_usuario(request)
