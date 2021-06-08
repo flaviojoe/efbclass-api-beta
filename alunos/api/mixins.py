@@ -28,6 +28,16 @@ class AlunoViewSetMixin(object):
         except ValidationError:
             return Response(respostaErro([], 'Erro ao atualizar dados públicos!'))
 
+    @action(detail=True, methods=['put'])
+    def atualizar_modo_escuro(self, request, pk=None):
+        try:
+            instance = request.user.usuario_aluno
+            instance.modo_escuro = not instance.modo_escuro
+            instance.save()
+            return Response(respostaSucesso([], 'Modo escuro atualizado com sucesso!'))
+        except ValidationError:
+            return Response(respostaErro([], 'Erro ao atualizar modo escuro!'))
+
     @action(detail=False, methods=['get'])
     def detalhe_usuario(self, request, pk=None):
         usuario = request.user

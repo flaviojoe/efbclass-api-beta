@@ -26,3 +26,4 @@ class AlunoViewSet(AssociandoUserRequestMixin, AlunoViewSetMixin, ModelViewSet):
     authentication_classes = (TokenAuthentication, SessionAuthentication,)
     serializer_class = AlunoSerializers
     queryset = Aluno.objects.select_related('usuario', 'empresa', 'departamento', 'setor', 'equipe').all()
+

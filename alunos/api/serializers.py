@@ -18,7 +18,7 @@ class AlunoSerializers(serializers.ModelSerializer):
     class Meta:
         model = Aluno
         fields = ['id', 'nome', 'dta_nasc', 'foto_perfil',
-                  'empresa', 'departamento', 'setor', 'regional', 'equipe', 'criado_em', 'modificado_em', 'usuario']
+                  'empresa', 'departamento', 'setor', 'regional', 'equipe', 'criado_em', 'modificado_em', 'usuario', 'modo_escuro']
 
     def get_imagem(self, obj):
         if obj.foto_perfil:
@@ -40,7 +40,7 @@ class AlunoUpdateSerializers(AuditFieldsSerializersMixin, serializers.ModelSeria
 
     class Meta:
         model = Aluno
-        fields = ['nome', 'dta_nasc', 'criado_por', 'modificado_por']
+        fields = ['nome', 'dta_nasc', 'criado_por', 'modificado_por', 'modo_escuro']
 
 
 class FotoPerfilSerializers(AuditFieldsSerializersMixin, serializers.ModelSerializer):

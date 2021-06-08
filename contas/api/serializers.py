@@ -53,12 +53,13 @@ class FotoPerfilSerializer(serializers.ModelSerializer):
 class UsuarioSerializers(serializers.ModelSerializer):
 	nome = serializers.SerializerMethodField(method_name='get_nome')
 	groups = GroupSerializer(many=True)
-	# aluno = FotoPerfilSerializer(source='usuario_aluno', many=False)
 	foto_perfil = serializers.SerializerMethodField(method_name='get_avatar')
+	modo_escuro = serializers.SerializerMethodField(method_name='get_modo_escuro')
+	aluno_id = serializers.SerializerMethodField(method_name='get_aluno_id')
 
 	class Meta:
 		model = User
-		fields = ('id', 'username', 'nome', 'email', 'groups', 'foto_perfil')
+		fields = ('id', 'username', 'nome', 'email', 'groups', 'foto_perfil', 'modo_escuro', 'aluno_id')
 
 	def get_nome(self, obj):
 		return obj.get_full_name()
@@ -67,6 +68,12 @@ class UsuarioSerializers(serializers.ModelSerializer):
 		request = self.context.get('request')
 		imagem_url = obj.usuario_aluno.foto_perfil.url
 		return request.build_absolute_uri(imagem_url)
+
+	def get_modo_escuro(self, obj):
+		return obj.usuario_aluno.modo_escuro
+
+	def get_aluno_id(self, obj):
+		return obj.usuario_aluno.pk
 
 
 class UsuarioAlunoSerializers(serializers.ModelSerializer):
