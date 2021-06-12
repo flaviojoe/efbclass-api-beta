@@ -24,7 +24,7 @@ from ..models import Categoria, Curso, HistoricoAula, Matricula, Topico
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 5
+    page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -58,11 +58,13 @@ class CursoViewSet(AssociandoUserRequestMixin, CursoViewSetMixin, ModelViewSet):
 
         filtros = dict(request.GET.lists())
 
-        categoria = str(filtros.get('filter')[0]).lower()
+        qs = Curso.objects.filter(empresa_id=aluno.empresa_id).select_related('categoria')
 
-        queryset = self.filter_queryset(
-            Curso.objects.filter(empresa_id=aluno.empresa_id, categoria__nome__iexact=categoria).select_related(
-                'categoria').all())
+        if filtros:
+            categoria = str(filtros.get('filter')[0]).lower()
+            qs.filter(categoria__nome__iexact=categoria)
+
+        queryset = self.filter_queryset(qs.all())
 
         page = self.paginate_queryset(queryset)
         if page is not None:

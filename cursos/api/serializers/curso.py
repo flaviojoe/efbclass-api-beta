@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from rest_framework import serializers
 
 from core.mixins import AuditFieldsSerializersMixin
@@ -20,7 +21,7 @@ class MatriculaCreateSerializers(AuditFieldsSerializersMixin, serializers.ModelS
 
 
 class CursoSimpleSerializers(serializers.ModelSerializer):
-	imagem = serializers.SerializerMethodField()
+	# imagem = serializers.SerializerMethodField()
 	criado_por = UsuarioField(many=False, read_only=True)
 
 	class Meta:
@@ -28,9 +29,11 @@ class CursoSimpleSerializers(serializers.ModelSerializer):
 		fields = ['id', 'nome', 'imagem', 'criado_por']
 
 	def get_imagem(self, obj):
-		request = self.context.get('request')
-		imagem_url = obj.imagem.url
-		return request.build_absolute_uri(imagem_url)
+		if settings.DEBUG:
+			request = self.context.get('request')
+			imagem_url = obj.imagem.url
+			return request.build_absolute_uri(imagem_url)
+		return obj.imagem.url
 
 
 class MatriculaSerializers(serializers.ModelSerializer):

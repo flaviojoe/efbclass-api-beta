@@ -11,7 +11,7 @@ from .models import Pergunta, Questionario, Resposta, QuestionarioXPergunta, Pro
 
 @admin.register(Avaliacao)
 class AvaliacaoAdmin(ExcludeAuditFieldsAdminForm, admin.ModelAdmin):
-    list_display = ['criado_por', 'id', 'curso', 'e_correta', 'pergunta', 'resposta']
+    list_display = ['tentativa', 'criado_por', 'id', 'curso', 'e_correta', 'pergunta', 'resposta']
 
     def get_queryset(self, request):
         return super(AvaliacaoAdmin, self).get_queryset(request=request).select_related(

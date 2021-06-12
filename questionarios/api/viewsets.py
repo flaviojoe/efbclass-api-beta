@@ -1,70 +1,90 @@
 # -*- coding: utf-8 -*-
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.pagination import PageNumberPagination
 
+from alunos.models import Aluno
 from core.mixins import AssociandoUserRequestMixin
 from core.utils import respostaErro
-from .mixins import QuestionarioViewsetMixin, ProvaViewsetMixin, AvaliacaoViewSetMixin
+from .mixins import QuestionarioViewsetMixin, AvaliacaoViewSetMixin
 from .serializers import QuestionarioSerializers, ProvaSerializers, \
-    AvaliacaoSerializers, RelatorioProvasAlunosSerializers
+    AvaliacaoSerializers, RelatorioProvasAlunosSerializers, ProvaDetailsSerializers
 from ..models import Prova, Questionario, Avaliacao
-from alunos.models import Aluno
-from rest_framework.decorators import action
+from ..queries import get_provas_alunos
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 
 class QuestionarioViewset(AssociandoUserRequestMixin, QuestionarioViewsetMixin, ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     serializer_class = QuestionarioSerializers
-    queryset = Questionario.objects.select_related('curso').all()
+    queryset = Questionario.objects.select_related('curso', 'curso__criado_por').all()
 
 
-class ProvaViewset(AssociandoUserRequestMixin, ProvaViewsetMixin, ModelViewSet):
+class ProvaViewset(AssociandoUserRequestMixin, ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     serializer_class = ProvaSerializers
-    queryset = Prova.objects \
-        .select_related('matricula', 'questionario') \
-        .prefetch_related('questionario__curso', 'questionario__curso__criado_por') \
-        .all()
+    queryset = Prova.objects.select_related('matricula', 'questionario').all()
+    pagination_class = StandardResultsSetPagination
+
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'partial_update', 'update']:
+            return ProvaDetailsSerializers
+        return ProvaSerializers
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = Prova.objects.select_related('matricula', 'questionario') \
+            .extra(select={
+            'qtd_perguntas': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id'}) \
+            .extra(select={
+            'qtd_respostas_certas': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id'}) \
+            .get(id=self.kwargs['pk'])
+
+        serializer = ProvaDetailsSerializers(instance)
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        usuario = request.user
+
+        queryset = Prova.objects.select_related('matricula', 'questionario', 'questionario__curso',
+                                                'questionario__curso__criado_por') \
+            .extra(select={
+            'qtd_perguntas': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 1'}) \
+            .extra(select={
+            'qtd_respostas_certas': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 1'}) \
+            .extra(select={
+            'qtd_perguntas_2': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 2'}) \
+            .extra(select={
+            'qtd_respostas_certas_2': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 2'}) \
+            .extra(select={
+            'qtd_perguntas_3': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 3'}) \
+            .extra(select={
+            'qtd_respostas_certas_3': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 3'}) \
+ \
+            .filter(matricula__usuario_id=usuario.pk)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def provas_alunos(self, request, pk=None):
         try:
-            queryset = Aluno.objects.raw('''
-                SELECT a.id,
-                c.id as id_prova,
-                b.username as login,
-                a.nome,
-                c.finalizado,
-                c.curso_id,
-                d.nome as curso,
-                a.empresa_id,
-                f.nome as empresa_nome,
-                sum(CASE e_correta WHEN true THEN 1	ELSE 0 END) acertos
-                
-                FROM public.alunos_aluno a
-                left join auth_user b on a.usuario_id=b.id
-                left join questionarios_prova c on a.usuario_id=c.criado_por_id
-                left join cursos_curso d on c.curso_id=d.id
-                left join questionarios_avaliacao e on a.usuario_id=e.criado_por_id and c.curso_id=e.curso_id
-                left join empresas_empresa f on a.empresa_id = f.id
-                
-                where a.id > 6
-                
-                group by a.id,
-                c.id,
-                username, a.nome,
-                c.finalizado,
-                c.curso_id,
-                d.nome,
-                a.empresa_id,
-                f.nome
-            ''')
+            queryset = Aluno.objects.raw(get_provas_alunos())
             serializer = RelatorioProvasAlunosSerializers(queryset, many=True)
             return Response(serializer.data)
         except Exception as ex:
@@ -77,5 +97,5 @@ class AvaliacaoViewset(AssociandoUserRequestMixin, AvaliacaoViewSetMixin, Create
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     serializer_class = AvaliacaoSerializers
-    queryset = Avaliacao.objects.select_related('questionario_aluno', 'pergunta', 'resposta', 'criado_por',
+    queryset = Avaliacao.objects.select_related('curso', 'prova', 'pergunta', 'resposta', 'criado_por',
                                                 'modificado_por').all()

@@ -5,14 +5,13 @@ from django.db.models import Prefetch
 from rest_framework.response import Response
 
 from core.utils import respostaSucesso, respostaErro
-from .serializers import QuestionarioDetailsSerializers, QuestionarioSerializers, ProvaDetailsSerializers, \
-    ProvaSerializers
+from .serializers import QuestionarioDetailsSerializers, QuestionarioSerializers
 from ..models import Questionario, QuestionarioXPergunta, Prova, Resposta, Avaliacao, Pergunta
 
 
 class QuestionarioViewsetMixin(object):
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action in ['retrieve', 'partial_update', 'update']:
             return QuestionarioDetailsSerializers
         return QuestionarioSerializers
 
@@ -20,7 +19,7 @@ class QuestionarioViewsetMixin(object):
         pk = kwargs.get('pk')
 
         qxp = QuestionarioXPergunta.objects \
-            .select_related('pergunta') \
+            .select_related('pergunta', 'questionario') \
             .prefetch_related('pergunta__respostas_pergunta') \
             .filter(questionario_id=pk)
         pf_qxp = Prefetch('questionarios_mapeados', queryset=qxp)
@@ -28,37 +27,10 @@ class QuestionarioViewsetMixin(object):
         queryset = Questionario.objects \
             .select_related('curso') \
             .prefetch_related(
-                pf_qxp) \
+            pf_qxp) \
             .get(pk=pk)
 
         serializer = QuestionarioDetailsSerializers(queryset)
-        return Response(serializer.data)
-
-
-class ProvaViewsetMixin(object):
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return ProvaDetailsSerializers
-        return ProvaSerializers
-
-    def get_queryset(self):
-        if self.action == 'retrieve':
-            return Prova.objects \
-                .select_related('matricula', 'questionario__curso') \
-                .prefetch_related('questionario__questionarios_mapeados') \
-                .all()
-        return super(ProvaViewsetMixin, self).get_queryset()
-
-    def list(self, request, *args, **kwargs):
-        usuario = request.user
-
-        queryset = Prova.objects \
-            .select_related('matricula', 'questionario') \
-            .prefetch_related('questionario__curso', 'questionario__curso__criado_por') \
-            .filter(matricula__usuario=usuario) \
-            .all()
-
-        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
@@ -67,36 +39,56 @@ class AvaliacaoViewSetMixin(object):
         try:
             dados = request.data.copy()
             usuario = request.user
-            prova = Prova.objects.get(pk=dados[0].get('questionario_aluno_id'))
+            prova = Prova.objects.get(pk=dados[0].get('prova_id'))
+            curso_id = dados[0].get('curso_id')
             alvos = []
-            for d in dados:
-                r = Resposta.objects.get(id=d.get('resposta_id'))
-                alvos.append(
-                    Avaliacao(
-                        prova=prova,
-                        pergunta=Pergunta.objects.get(id=d.get('pergunta_id')),
-                        resposta=r,
-                        e_correta=r.e_correta,
-                        criado_por=usuario,
-                        modificado_por=usuario,
-                        curso=prova.curso
+
+            ultima_tentativa = Avaliacao.objects.filter(criado_por_id=usuario.pk, prova_id=prova.pk,
+                                                        curso_id=curso_id).order_by(
+                '-tentativa').first()
+
+            tentativa = ultima_tentativa.tentativa if ultima_tentativa else 0
+            nova_tentativa = tentativa + 1
+
+            if tentativa < 3:
+                for d in dados:
+                    r = Resposta.objects.get(id=d.get('resposta_id'))
+                    p_id = d.get('pergunta_id')
+                    alvos.append(
+                        Avaliacao(
+                            prova_id=prova.pk,
+                            pergunta_id=p_id,
+                            resposta_id=r.pk,
+                            e_correta=r.e_correta,
+                            criado_por_id=usuario.pk,
+                            curso_id=curso_id,
+                            tentativa=nova_tentativa
+                        )
                     )
-                )
-            Avaliacao.objects.bulk_create(alvos)
-            prova.finalizado = True
-            prova.save()
-            return Response(respostaSucesso([], 'Prova recebida com sucesso!'))
+                Avaliacao.objects.bulk_create(alvos)
+
+                if nova_tentativa >= 3:
+                    prova.finalizado = True
+
+                prova.save()
+                return Response(respostaSucesso([], 'Prova recebida com sucesso!'))
+
+            return Response(respostaErro([], 'Já utilizou todas as tentativas disponíveis!'))
+
         except Prova.DoesNotExist as ex:
             return Response(respostaErro([], 'Prova não encontrada!'))
         except ValueError as ex:
-            print(ex)
+            print('ValueError => ', ex)
             return Response(respostaErro([], 'Erro ao processar sua prova!'))
         except ValidationError as ex:
-            print(ex.messages)
+            print('ValidationError => ', ex.messages)
             return Response(respostaErro([], 'Erro ao processar sua prova!'))
         except IntegrityError as ex:
-            print(ex)
+            print('IntegrityError => ', ex)
+            return Response(respostaErro([], 'Erro ao processar sua prova!'))
+        except AttributeError as ex:
+            print('AttributeError => ', ex)
             return Response(respostaErro([], 'Erro ao processar sua prova!'))
         except Exception as ex:
-            print(type(ex))
+            print('Exception => ', type(ex))
             return Response(respostaErro([], 'Erro ao processar sua prova!'))

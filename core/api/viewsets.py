@@ -26,7 +26,7 @@ class RankViewSet(AssociandoUserRequestMixin, ListAPIView, GenericViewSet):
         usuario = request.user
         aluno = Aluno.objects.select_related('empresa').get(usuario=usuario)
 
-        queryset = Rank.objects.filter(empresa=aluno.empresa.nome).all()[:10]
+        queryset = Rank.objects.filter(empresa=aluno.empresa.nome).all()
 
         serializer = RankSerializers(queryset, many=True, context={"request": request})
         return Response(serializer.data)

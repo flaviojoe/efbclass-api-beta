@@ -73,6 +73,7 @@ class Avaliacao(Timestamps, AuditModel):
     resposta = models.ForeignKey(Resposta, on_delete=models.CASCADE, related_name='prova_respostas')
     e_correta = models.BooleanField(default=False)
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='prova_curso')
+    tentativa = models.IntegerField(default=1)
 
     class Meta:
         verbose_name = 'Avaliação'
