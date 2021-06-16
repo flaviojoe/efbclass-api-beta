@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import django_filters
+from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Prefetch
 from knox.auth import TokenAuthentication
 from rest_framework import filters
@@ -13,18 +15,18 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from core.mixins import AssociandoUserRequestMixin
-from .mixins import MatriculaViewSetMixin, HistoricoAulaViewSetMixin, VideoAulaUpdateViewMixin, CursoViewSetMixin, \
-    CategoriaViewSetMixin
+from .mixins import MatriculaViewSetMixin, HistoricoAulaViewSetMixin, VideoAulaUpdateViewMixin, CategoriaViewSetMixin
 from .serializers.aulas import HistoricoAulaSerializers
 from .serializers.categorias import CategoriaSimpleSerializers
 from .serializers.curso import CursoSerializers, MatriculaSerializers, CursoGradeCurricularAulasSerializers, \
-    CursoTopicosAulasSerializers, CursosPorCategoriaDetailsSerializers
+    CursoTopicosAulasSerializers, CursosPorCategoriaDetailsSerializers, CursosDoAlunoSerializers, \
+    CursoDetailsSerializers
 from .serializers.topicos import TopicoSerializers
 from ..models import Categoria, Curso, HistoricoAula, Matricula, Topico
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 20
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -43,41 +45,102 @@ class TopicosViewSet(ModelViewSet):
     queryset = Topico.objects.select_related('criado_por').all()
 
 
-class CursoViewSet(AssociandoUserRequestMixin, CursoViewSetMixin, ModelViewSet):
+class MeusCursosViewSet(AssociandoUserRequestMixin, ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    serializer_class = CursosDoAlunoSerializers
+    queryset = Curso.objects.select_related('categoria').all()
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
+    search_fields = ('nome',)
+    ordering_fields = ('nome', 'criado_em')
+    pagination_class = StandardResultsSetPagination
+
+    def get_matricula_curso_usuario(self, usuario):
+        return Matricula.objects.filter(usuario_id=usuario.pk)
+
+    def get_matriculas_usuario(self, queryset):
+        prefetch_curso_usuario = Prefetch('curso_usuario', queryset=queryset)
+        return prefetch_curso_usuario
+
+    def get_queryset(self):
+        usuario = self.request.user
+
+        queryset_curso_usuario = self.get_matricula_curso_usuario(usuario)
+        prefetch_curso_usuario = self.get_matriculas_usuario(queryset_curso_usuario)
+
+        queryset = Curso.objects \
+            .select_related('categoria', 'criado_por') \
+            .prefetch_related(prefetch_curso_usuario) \
+            .filter(curso_usuario__usuario_id=usuario.pk) \
+            .all()
+
+        return queryset
+
+
+class CategoriaCursoFilter(django_filters.FilterSet):
+    nome = django_filters.CharFilter(lookup_expr='icontains')
+    categoria = django_filters.CharFilter(lookup_expr='iexact', field_name='categoria__nome')
+
+    class Meta:
+        model = Curso
+        fields = ['nome', 'categoria']
+
+
+class CursoViewSet(AssociandoUserRequestMixin, ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication, SessionAuthentication)
     serializer_class = CursoSerializers
     queryset = Curso.objects.select_related('categoria').all()
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
-    search_fields = ('nome', '=categoria__nome')
+    filter_backends = (filters.OrderingFilter, DjangoFilterBackend)
+    # filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
+    filterset_class = CategoriaCursoFilter
+    # search_fields = ('nome',)
     ordering_fields = ('nome', 'criado_em')
     pagination_class = StandardResultsSetPagination
 
-    def list(self, request, *args, **kwargs):
-        aluno = request.user.usuario_aluno
+    def get_queryset(self):
+        if self.action == 'list':
+            aluno = self.request.user.usuario_aluno
+            queryset = Curso.objects.filter(empresa_id=aluno.empresa_id).select_related('categoria')
+            return queryset
+        return super(CursoViewSet, self).get_queryset()
 
-        filtros = dict(request.GET.lists())
+    def get_matricula_curso_usuario(self, usuario):
+        return Matricula.objects.filter(usuario_id=usuario.pk)
 
-        qs = Curso.objects.filter(empresa_id=aluno.empresa_id).select_related('categoria')
+    def get_matriculas_usuario(self, queryset):
+        prefetch_curso_usuario = Prefetch('curso_usuario', queryset=queryset)
+        return prefetch_curso_usuario
 
-        if filtros:
-            categoria = str(filtros.get('filter')[0]).lower()
-            qs.filter(categoria__nome__iexact=categoria)
-
-        queryset = self.filter_queryset(qs.all())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    # def list(self, request, *args, **kwargs):
+    #     aluno = request.user.usuario_aluno
+    #
+    #     filtros = dict(request.GET.lists())
+    #
+    #     print(filtros)
+    #
+    #     queryset = Curso.objects.filter(empresa_id=aluno.empresa_id).select_related('categoria')
+    #
+    #     if filtros and filtros.get('categoria__nome'):
+    #         categoria = str(filtros.get('categoria__nome')[0]).lower()
+    #         print(categoria)
+    #         queryset.filter(categoria__nome__iexact=categoria).all()
+    #
+    #     # queryset = self.filter_queryset(qs.all())
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True)
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def cursos_por_categoria(self, request, pk=None):
         aluno = request.user.usuario_aluno
-        queryset = Curso.objects.select_related('criado_por', 'categoria').filter(empresa_id=aluno.empresa_id, categoria_id=pk)
+        queryset = Curso.objects.select_related('criado_por', 'categoria').filter(empresa_id=aluno.empresa_id,
+                                                                                  categoria_id=pk)
         serializer = CursosPorCategoriaDetailsSerializers(queryset, many=True)
         return Response(serializer.data)
 
@@ -85,8 +148,8 @@ class CursoViewSet(AssociandoUserRequestMixin, CursoViewSetMixin, ModelViewSet):
         curso_id = kwargs.get('pk')
         usuario = request.user
 
-        queryset_curso_usuario = self.get_matricula_curso_usuario(usuario, curso_id)
-        prefetch_curso_usuario = self.get_matriculas_usuario(queryset_curso_usuario)
+        queryset_curso_usuario = Matricula.objects.filter(usuario_id=usuario.pk, curso_id=curso_id)
+        prefetch_curso_usuario = Prefetch('curso_usuario', queryset=queryset_curso_usuario)
 
         queryset = Curso.objects \
             .select_related('categoria', 'criado_por') \

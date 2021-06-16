@@ -3,10 +3,10 @@ from rest_framework import routers
 from alunos.api.viewsets import AlunoViewSet
 from core.api.viewsets import RankViewSet
 from cursos.api.viewsets import CursoViewSet, CategoriaViewSet, HistoricoAulaViewset, MatriculaCursoViewSet, \
-    TopicosViewSet
+    MeusCursosViewSet, TopicosViewSet
 from empresas.api.viewsets import EmpresaViewSet
 from faqs.api.viewsets import FAQViewSet
-from materiais.api.viewsets import MaterialViewSet
+from materiais.api.viewsets import MaterialViewSet, InformativoViewSet
 from notificacoes.api.viewsets import NotificacaoUsuarioViewSet
 from questionarios.api.viewsets import QuestionarioViewset, ProvaViewset, AvaliacaoViewset
 
@@ -14,8 +14,10 @@ router = routers.DefaultRouter()
 router.register(r'empresas', EmpresaViewSet, basename='empresas')
 router.register(r'categorias', CategoriaViewSet, basename='categorias')
 router.register(r'cursos', CursoViewSet, basename='cursos')
+router.register(r'meus_cursos', MeusCursosViewSet, basename='meus_cursos')
 router.register(r'historico_aula', HistoricoAulaViewset, basename='historico_aula')
 router.register(r'materiais', MaterialViewSet, basename='materiais')
+router.register(r'informativos', InformativoViewSet, basename='informativos')
 router.register(r'alunos', AlunoViewSet, basename='alunos')
 router.register(r'matricula', MatriculaCursoViewSet, basename='matriculas')
 router.register(r'faqs', FAQViewSet, basename='faqs')

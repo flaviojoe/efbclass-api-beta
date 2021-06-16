@@ -23,7 +23,7 @@ class Material(Timestamps, AuditModel):
     aula = models.ForeignKey(Aula, on_delete=models.CASCADE, related_name='materiais_aula', null=True, blank=True)
     tipo = models.ForeignKey(TipoMaterial, on_delete=models.CASCADE, related_name='materiais_tipo')
     nome = models.CharField(max_length=120)
-    conteudo = models.CharField(max_length=200, blank=True)
+    conteudo = models.CharField(max_length=200, blank=True, help_text='Um resumo do material (Não é obrigatório)')
     arquivo = models.FileField(upload_to='material', null=True, blank=True)
     informativo = models.BooleanField(default=False)
 

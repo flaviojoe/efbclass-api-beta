@@ -15,31 +15,59 @@ class Migration(migrations.Migration):
 			'''
 			DROP VIEW IF EXISTS core_ranks;
 			CREATE OR REPLACE VIEW core_ranks AS
-				select row_number() over() as id,
-				z.*
-				from (
-				select bs.*,
-				row_number() over (partition by bs.empresa order by bs.pontuacao desc, bs.data_ultima_prova) posicao
-				from (
-				select e.nome as empresa,
-				b.username as usuario,
-				b.first_name || ' ' || b.last_name as nome,
-				d.foto_perfil as avatar,
-				sum((case when a.e_correta = true then 1 else 0 end)) qtd_acertos,
-				count(a.e_correta) qtd_perguntas,
-				max(a.criado_em) data_ultima_prova,
-				(cast(sum((case when a.e_correta = true then 1 else 0 end)) as float) / cast(count(a.e_correta) as float)) * 10 pontuacao
-				from questionarios_avaliacao a
-				inner join auth_user b on a.criado_por_id = b.id
-				inner join cursos_curso c on a.curso_id = c.id
-				inner join alunos_aluno d on a.criado_por_id = d.usuario_id
-				inner join empresas_empresa e on d.empresa_id = e.id
-				group by e.nome,
-				b.username,
-				b.first_name || ' ' || b.last_name,
-				d.foto_perfil
+				 SELECT row_number() OVER () AS id,
+    z.empresa,
+    z.usuario,
+    z.nome,
+    z.avatar,
+    z.qtd_acertos,
+    z.qtd_perguntas,
+    z.data_ultima_prova,
+    z.pontuacao,
+    z.posicao
+   FROM ( 
+       SELECT trat.*,
+	   row_number() OVER (PARTITION BY trat.empresa ORDER BY trat.pontuacao DESC) AS posicao
+	   FROM (
+	   SELECT bs.empresa,
+            bs.usuario,
+            bs.nome,
+            bs.avatar,
+            bs.qtd_acertos,
+            bs.qtd_perguntas,
+            bs.data_ultima_prova,
+            bs.pontuacao,
+            row_number() OVER (PARTITION BY bs.empresa, bs.usuario ORDER BY bs.pontuacao DESC) AS posicao_usuario
+           FROM ( SELECT e.nome AS empresa,
+                    b.username AS usuario,
+                    (b.first_name::text || ' '::text) || b.last_name::text AS nome,
+                    d.foto_perfil AS avatar,
+                    sum(
+                        CASE
+                            WHEN a.e_correta = true THEN 1
+                            ELSE 0
+                        END) AS qtd_acertos,
+                    count(a.e_correta) AS qtd_perguntas,
+				 	max(date_trunc('day', a.criado_em)) as data_ultima_prova,
+                    sum(
+                        CASE
+                            WHEN a.e_correta = true THEN 1
+                            ELSE 0
+                        END)::double precision / count(a.e_correta)::double precision * 10::double precision AS pontuacao,
+				   a.tentativa
+                   FROM questionarios_avaliacao a
+                     JOIN auth_user b ON a.criado_por_id = b.id
+                     JOIN cursos_curso c ON a.curso_id = c.id
+                     JOIN alunos_aluno d ON a.criado_por_id = d.usuario_id
+                     JOIN empresas_empresa e ON d.empresa_id = e.id
+				 
+				 --where b.username = 'diego'
+				 
+                  GROUP BY e.nome, b.username, ((b.first_name::text || ' '::text) || b.last_name::text), d.foto_perfil, a.tentativa
 				) bs
-				) z 
+				) trat
+				where trat.posicao_usuario = 1
+				) z
 				; 
 			'''
 		),
@@ -48,10 +76,22 @@ class Migration(migrations.Migration):
 			DROP VIEW IF EXISTS core_ranks_curso;
 			CREATE OR REPLACE VIEW core_ranks_curso AS
 				select row_number() over() as id,
-				z.*
+				z.empresa,
+				z.nome_curso,
+				z.usuario,
+				z.nome,
+				z.avatar,
+				z.qtd_acertos,
+				z.qtd_perguntas,
+				z.data_ultima_prova,
+				z.pontuacao,
+				z.posicao
+				from (
+				select trat.*,
+				row_number() over (partition by trat.empresa, trat.nome_curso order by trat.pontuacao desc) posicao
 				from (
 				select bs.*,
-				row_number() over (partition by bs.empresa, bs.nome_curso order by bs.pontuacao desc, bs.data_ultima_prova) posicao
+				row_number() over (partition by bs.empresa, bs.nome_curso, bs.usuario order by bs.pontuacao desc) posicao_usuario
 				from (
 				select e.nome as empresa,
 				c.nome as nome_curso,
@@ -60,8 +100,9 @@ class Migration(migrations.Migration):
 				d.foto_perfil as avatar,
 				sum((case when a.e_correta = true then 1 else 0 end)) qtd_acertos,
 				count(a.e_correta) qtd_perguntas,
-				max(a.criado_em) data_ultima_prova,
-				(cast(sum((case when a.e_correta = true then 1 else 0 end)) as float) / cast(count(a.e_correta) as float)) * 10 pontuacao
+				max(date_trunc('day', a.criado_em)) data_ultima_prova,
+				(cast(sum((case when a.e_correta = true then 1 else 0 end)) as float) / cast(count(a.e_correta) as float)) * 10 pontuacao,
+				a.tentativa
 				from questionarios_avaliacao a
 				inner join auth_user b on a.criado_por_id = b.id
 				inner join cursos_curso c on a.curso_id = c.id
@@ -71,8 +112,10 @@ class Migration(migrations.Migration):
 				c.nome,
 				b.username,
 				b.first_name || ' ' || b.last_name,
-				d.foto_perfil
+				d.foto_perfil,
+				a.tentativa
 				) bs
+				) trat
 				) z
 				; 
 			'''

@@ -69,36 +69,6 @@ class VideoAulaUpdateViewMixin(object):
             return Response(respostaErro([], 'Aula informada não existe!'))
 
 
-class CursoViewSetMixin(object):
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return CursoDetailsSerializers
-        return CursoSerializers
-
-    def get_matricula_curso_usuario(self, usuario, curso_id):
-        return Matricula.objects.filter(usuario=usuario, curso_id=curso_id)
-
-    def get_matriculas_usuario(self, queryset):
-        prefetch_curso_usuario = Prefetch('curso_usuario', queryset=queryset)
-        return prefetch_curso_usuario
-
-    @action(detail=False, methods=['get'])
-    def cursos_do_aluno(self, request, pk=None):
-        usuario = request.user
-
-        queryset_curso_usuario = self.get_matricula_curso_usuario(usuario, pk)
-        prefetch_curso_usuario = self.get_matriculas_usuario(queryset_curso_usuario)
-
-        queryset = Curso.objects \
-            .select_related('categoria', 'criado_por') \
-            .prefetch_related(prefetch_curso_usuario) \
-            .filter(curso_usuario__usuario=usuario) \
-            .all()
-
-        serializer = CursosDoAlunoSerializers(queryset, many=True, context={"request": request})
-        return Response(serializer.data)
-
-
 class CategoriaViewSetMixin(object):
     def categorias_empresa_usuario(self, request):
         aluno = request.user.usuario_aluno
