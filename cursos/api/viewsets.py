@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import django_filters
-from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Prefetch
+from django_filters.rest_framework import DjangoFilterBackend
 from knox.auth import TokenAuthentication
 from rest_framework import filters
 from rest_framework.authentication import SessionAuthentication
@@ -19,8 +19,7 @@ from .mixins import MatriculaViewSetMixin, HistoricoAulaViewSetMixin, VideoAulaU
 from .serializers.aulas import HistoricoAulaSerializers
 from .serializers.categorias import CategoriaSimpleSerializers
 from .serializers.curso import CursoSerializers, MatriculaSerializers, CursoGradeCurricularAulasSerializers, \
-    CursoTopicosAulasSerializers, CursosPorCategoriaDetailsSerializers, CursosDoAlunoSerializers, \
-    CursoDetailsSerializers
+    CursoTopicosAulasSerializers, CursosPorCategoriaDetailsSerializers, CursosDoAlunoSerializers
 from .serializers.topicos import TopicoSerializers
 from ..models import Categoria, Curso, HistoricoAula, Matricula, Topico
 
@@ -92,9 +91,7 @@ class CursoViewSet(AssociandoUserRequestMixin, ModelViewSet):
     serializer_class = CursoSerializers
     queryset = Curso.objects.select_related('categoria').all()
     filter_backends = (filters.OrderingFilter, DjangoFilterBackend)
-    # filter_backends = (filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend)
     filterset_class = CategoriaCursoFilter
-    # search_fields = ('nome',)
     ordering_fields = ('nome', 'criado_em')
     pagination_class = StandardResultsSetPagination
 
@@ -111,30 +108,6 @@ class CursoViewSet(AssociandoUserRequestMixin, ModelViewSet):
     def get_matriculas_usuario(self, queryset):
         prefetch_curso_usuario = Prefetch('curso_usuario', queryset=queryset)
         return prefetch_curso_usuario
-
-    # def list(self, request, *args, **kwargs):
-    #     aluno = request.user.usuario_aluno
-    #
-    #     filtros = dict(request.GET.lists())
-    #
-    #     print(filtros)
-    #
-    #     queryset = Curso.objects.filter(empresa_id=aluno.empresa_id).select_related('categoria')
-    #
-    #     if filtros and filtros.get('categoria__nome'):
-    #         categoria = str(filtros.get('categoria__nome')[0]).lower()
-    #         print(categoria)
-    #         queryset.filter(categoria__nome__iexact=categoria).all()
-    #
-    #     # queryset = self.filter_queryset(qs.all())
-    #
-    #     page = self.paginate_queryset(queryset)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-    #
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def cursos_por_categoria(self, request, pk=None):

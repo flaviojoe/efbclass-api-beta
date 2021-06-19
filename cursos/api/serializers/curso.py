@@ -122,18 +122,19 @@ class CursoTopicosAulasSerializers(AuditFieldsSerializersMixin, serializers.Mode
 class CursoGradeCurricularAulasSerializers(AuditFieldsSerializersMixin, serializers.ModelSerializer):
 	categoria = serializers.StringRelatedField()
 	e_matriculado = serializers.ReadOnlyField()
+	qtd_topicos = serializers.SerializerMethodField(method_name='get_qtd_topicos', source='topicos_curso')
 	topicos = TopicoCursoGradeSerializers(source='topicos_curso', many=True)
 	criado_por = UsuarioField(many=False, read_only=True)
-
-	# matricula = MatriculaListProvasSerializers(many=True, source='curso_usuario')
 
 	class Meta:
 		model = Curso
 		fields = [
-			'id', 'nome', 'categoria', 'descricao', 'nivel', 'url', 'imagem', 'e_matriculado',
-			'criado_por', 'criado_em', 'modificado_em', 'topicos'
+			'id', 'nome', 'categoria', 'descricao', 'url', 'imagem', 'e_matriculado',
+			'criado_por', 'criado_em', 'modificado_em', 'qtd_topicos', 'topicos'
 		]
 
+	def get_qtd_topicos(self, obj):
+		return obj.topicos_curso.count()
 
 class CursosPorCategoriaRAWSerializers(AuditFieldsSerializersMixin, serializers.Serializer):
 	id = serializers.IntegerField()
