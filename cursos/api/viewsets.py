@@ -128,6 +128,13 @@ class CursoViewSet(AssociandoUserRequestMixin, ModelViewSet):
             .select_related('categoria', 'criado_por') \
             .prefetch_related(
             'topicos_curso', 'topicos_curso__topico_aula', prefetch_curso_usuario) \
+            .extra(select={
+            'qtd_aulas': '''
+                select count(cursos_aula.id)
+                from cursos_aula 
+                inner join cursos_topico on cursos_topico.id = cursos_aula.topico_id
+                where cursos_curso.id = cursos_topico.curso_id 	
+            '''}) \
             .get(pk=curso_id)
 
         serializer = CursoGradeCurricularAulasSerializers(queryset, many=False, context={"request": request})

@@ -52,7 +52,7 @@ class Topico(Timestamps, AuditModel):
     class Meta:
         verbose_name = 'Tópico'
         verbose_name_plural = 'Tópicos'
-        ordering = ['numero']
+        ordering = ['curso_id', 'numero']
 
     def __str__(self):
         return self.nome

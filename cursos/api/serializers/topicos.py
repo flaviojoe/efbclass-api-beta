@@ -34,15 +34,10 @@ class TopicoCursoDetailsSerializers(serializers.ModelSerializer):
 
 class TopicoCursoGradeSerializers(serializers.ModelSerializer):
 	aulas = AulaCursoGradeSerializers(source='topico_aula', many=True)
-	qtd_aulas = serializers.SerializerMethodField(method_name='get_qtd_aulas', source='topico_aula')
 
 	class Meta:
 		model = Topico
-		fields = ['id', 'numero', 'nome', 'qtd_aulas', 'aulas']
-
-	def get_qtd_aulas(self, obj):
-		return obj.topico_aula.count()
-
+		fields = ['id', 'numero', 'nome', 'aulas']
 
 class AulasTopicoSerializers(serializers.ModelSerializer):
 	class Meta:
