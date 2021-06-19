@@ -42,6 +42,7 @@ class InformativoViewSet(AssociandoUserRequestMixin, ModelViewSet):
     serializer_class = MaterialSerializers
     queryset = Material.objects.filter(informativo__exact=True).select_related('curso', 'tipo', 'criado_por')
     pagination_class = StandardResultsSetPagination
+    filter_backends = (filters.OrderingFilter, filters.SearchFilter)
     search_fields = ('nome',)
 
     def get_queryset(self):
