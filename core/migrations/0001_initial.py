@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 	initial = False
 
 	dependencies = [
-		('questionarios', '0001_initial'),
+		('questionarios', '0002_avaliacao_tentativa'),
 	]
 
 	operations = [
