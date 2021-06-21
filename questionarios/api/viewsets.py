@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.db.models.functions import Coalesce
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
@@ -78,34 +79,6 @@ class ProvaViewset(AssociandoUserRequestMixin, ModelViewSet):
             .filter(matricula__usuario_id=usuario.pk)
 
         return queryset
-
- #    def list(self, request, *args, **kwargs):
- #        usuario = request.user
- #
- #        queryset = Prova.objects.select_related('matricula', 'questionario', 'questionario__curso',
- #                                                'questionario__curso__criado_por') \
- #            .extra(select={
- #            'qtd_perguntas': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 1'}) \
- #            .extra(select={
- #            'qtd_respostas_certas': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 1'}) \
- #            .extra(select={
- #            'qtd_perguntas_2': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 2'}) \
- #            .extra(select={
- #            'qtd_respostas_certas_2': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 2'}) \
- #            .extra(select={
- #            'qtd_perguntas_3': 'select count(id) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 3'}) \
- #            .extra(select={
- #            'qtd_respostas_certas_3': 'select sum(case when e_correta then 1 else 0 end) qtd_perguntas from questionarios_avaliacao where prova_id = questionarios_prova.id and tentativa = 3'}) \
- # \
- #            .filter(matricula__usuario_id=usuario.pk)
- #
- #        page = self.paginate_queryset(queryset)
- #        if page is not None:
- #            serializer = self.get_serializer(page, many=True)
- #            return self.get_paginated_response(serializer.data)
- #
- #        serializer = self.get_serializer(queryset, many=True)
- #        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def provas_alunos(self, request, pk=None):
