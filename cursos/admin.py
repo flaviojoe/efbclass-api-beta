@@ -19,7 +19,7 @@ class CategoriaAdmin(ExcludeAuditFieldsAdminForm, admin.ModelAdmin):
 class AulaCursoInline(ExcludeAuditFieldsAdminForm, NestedTabularInline):
 	model = Aula
 	extra = 1
-	fields = ['titulo', 'numero', 'url']
+	fields = ['titulo', 'numero', 'arquivo_video']
 
 
 class TopicoCursoInline(NestedStackedInline):
