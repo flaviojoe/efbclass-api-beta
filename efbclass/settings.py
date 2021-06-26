@@ -233,11 +233,12 @@ if REDIS_CACHE:
 
 # S3
 if STORAGE_S3:
-    print('Entrou em STORAGE_S3')
+    # print('Entrou em STORAGE_S3')
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    # AWS_QUERYSTRING_AUTH = False
     # S3_USE_SIGV4 = True
     # AWS_S3_SIGNATURE_VERSION = 's3v4'
     # S3UPLOAD_REGION = 'us-west-1'

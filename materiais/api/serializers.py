@@ -11,14 +11,18 @@ class MaterialSerializers(AuditFieldsSerializersMixin, serializers.ModelSerializ
     curso = serializers.StringRelatedField(many=False)
     tipo = serializers.StringRelatedField(many=False)
     mimetype = serializers.SerializerMethodField(method_name='get_mimetype')
+    filename = serializers.SerializerMethodField(method_name='get_filename')
 
     class Meta:
         model = Material
-        fields = ['id', 'nome', 'curso', 'tipo', 'conteudo', 'informativo', 'arquivo', 'criado_em', 'mimetype']
+        fields = ['id', 'nome', 'curso', 'tipo', 'conteudo', 'informativo', 'arquivo', 'criado_em', 'mimetype', 'filename']
 
     def get_mimetype(self, obj):
-        print(obj.arquivo.name)
         return mimetypes.guess_type(obj.arquivo.name)[0] if obj.arquivo else ''
+
+    def get_filename(self, obj):
+        return obj.filename
+
 
 
 class MaterialSimpleSerializers(AuditFieldsSerializersMixin, serializers.ModelSerializer):

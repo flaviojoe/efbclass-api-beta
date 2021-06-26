@@ -1,3 +1,4 @@
+import os
 from django.db import models
 
 from core.models import Timestamps, AuditModel
@@ -24,7 +25,7 @@ class Material(Timestamps, AuditModel):
     tipo = models.ForeignKey(TipoMaterial, on_delete=models.CASCADE, related_name='materiais_tipo')
     nome = models.CharField(max_length=120)
     conteudo = models.CharField(max_length=200, blank=True, help_text='Um resumo do material (Não é obrigatório)')
-    arquivo = models.FileField(upload_to='material', null=True, blank=True)
+    arquivo = models.FileField(upload_to='material')
     informativo = models.BooleanField(default=False)
 
     class Meta:
@@ -33,3 +34,7 @@ class Material(Timestamps, AuditModel):
 
     def __str__(self):
         return self.nome
+
+    @property
+    def filename(self):
+        return os.path.basename(self.arquivo.name)
