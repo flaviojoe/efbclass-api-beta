@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from django.db.models.functions import Coalesce
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action

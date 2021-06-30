@@ -49,11 +49,17 @@ class AvaliacaoViewSetMixin(object):
 
             tentativa = ultima_tentativa.tentativa if ultima_tentativa else 0
             nova_tentativa = tentativa + 1
+            qtd_perguntas = 0
+            qtd_acertos = 0
 
             if tentativa < 3:
                 for d in dados:
                     r = Resposta.objects.get(id=d.get('resposta_id'))
                     p_id = d.get('pergunta_id')
+
+                    qtd_perguntas += 1
+                    qtd_acertos += 1 if r.e_correta else 0
+
                     alvos.append(
                         Avaliacao(
                             prova_id=prova.pk,
@@ -68,6 +74,9 @@ class AvaliacaoViewSetMixin(object):
                 Avaliacao.objects.bulk_create(alvos)
 
                 if nova_tentativa >= 3:
+                    prova.finalizado = True
+
+                if qtd_perguntas > 0 and (qtd_acertos == qtd_perguntas):
                     prova.finalizado = True
 
                 prova.save()
