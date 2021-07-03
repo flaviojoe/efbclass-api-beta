@@ -152,13 +152,13 @@ class ProvaSerializers(AuditFieldsSerializersMixin, serializers.ModelSerializer)
         return obj.matricula.criado_em.strftime("%m/%d/%Y %H:%M:%S")
 
     def get_acertos(self, obj):
-        return obj.qtd_respostas_certas / obj.qtd_perguntas * 100 if obj.qtd_perguntas > 0 else 0
+        return round(obj.qtd_respostas_certas / obj.qtd_perguntas * 100, 1) if obj.qtd_perguntas > 0 else 0
 
     def get_acertos_2(self, obj):
-        return obj.qtd_respostas_certas_2 / obj.qtd_perguntas_2 * 100 if obj.qtd_perguntas_2 > 0 else 0
+        return round(obj.qtd_respostas_certas_2 / obj.qtd_perguntas_2 * 100, 1) if obj.qtd_perguntas_2 > 0 else 0
 
     def get_acertos_3(self, obj):
-        return obj.qtd_respostas_certas_3 / obj.qtd_perguntas_3 * 100 if obj.qtd_perguntas_3 > 0 else 0
+        return round(obj.qtd_respostas_certas_3 / obj.qtd_perguntas_3 * 100, 1) if obj.qtd_perguntas_3 > 0 else 0
 
 
 class ProvaDetailsSerializers(AuditFieldsSerializersMixin, serializers.Serializer):
