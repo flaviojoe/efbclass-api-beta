@@ -1,6 +1,6 @@
 from django.urls import path
-from .api.viewsets import VideoAulaUpdateView
+from .views import MeusTreinamentosView
 
 urlpatterns = [
-    path('', VideoAulaUpdateView.as_view())
+    path('meus_treinamentos', MeusTreinamentosView.as_view(), name='meus_treinamentos'),
 ]

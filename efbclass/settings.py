@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Lendo configurações do .env
 env = environ.Env(DEBUG=(bool, False))
-#env_file = os.path.join(BASE_DIR, ".env.exemplo")
+# env_file = os.path.join(BASE_DIR, ".env.exemplo")
 env_file = os.path.join(BASE_DIR, ".env.dev")
 environ.Env.read_env(env_file)
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'nested_inline',
+    'widget_tweaks',
     # 's3upload',
 
     # apps
@@ -74,10 +75,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'efbclass.urls'
 
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,9 +113,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
-# Password validation
-# https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -150,13 +149,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -199,14 +195,6 @@ if DEBUG and DEBUG_TOOLBAR:
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 429916160
 DATA_UPLOAD_MAX_MEMORY_SIZE = 429916160
-# 2.5MB - 2621440
-# 5MB - 5242880
-# 10MB - 10485760
-# 20MB - 20971520
-# 50MB - 5242880
-# 100MB 104857600
-# 250MB - 214958080
-# 500MB - 429916160
 
 # Vimeo API
 if VIMEO_HABILITADO:
@@ -216,19 +204,19 @@ if VIMEO_HABILITADO:
     VIMEO_CACHE_BACKEND = 'default'
 
 # Redis Django-Redis
-if REDIS_CACHE:
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": "redis://127.0.0.1:6379/1",
-            "OPTIONS": {
-                        "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            },
-            "KEY_PREFIX": "efbclass"
-        }
-    }
-    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-    SESSION_CACHE_ALIAS = 'default'
+# if REDIS_CACHE:
+#     CACHES = {
+#         "default": {
+#             "BACKEND": "django_redis.cache.RedisCache",
+#             "LOCATION": "redis://127.0.0.1:6379/1",
+#             "OPTIONS": {
+#                         "CLIENT_CLASS": "django_redis.client.DefaultClient",
+#             },
+#             "KEY_PREFIX": "efbclass"
+#         }
+#     }
+#     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+#     SESSION_CACHE_ALIAS = 'default'
 
 
 # S3
@@ -245,23 +233,8 @@ if STORAGE_S3:
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-# Destinations, with the following keys:
-#
-# key [required] Where to upload the file to, can be either:
-#     1. '/' = Upload to root with the original filename.
-#     2. 'some/path' = Upload to some/path with the original filename.
-#     3. functionName = Pass a function and create your own path/filename.
-# auth [optional] An ACL function to whether the current Django user can perform this action.
-# allowed [optional] List of allowed MIME types.
-# acl [optional] Give the object another ACL rather than 'public-read'.
-# cache_control [optional] Cache control headers, eg 'max-age=2592000'.
-# content_disposition [optional] Useful for sending files as attachments.
-# bucket [optional] Specify a different bucket for this particular object.
-# server_side_encryption [optional] Encryption headers for buckets that require it.
-#
-# S3UPLOAD_DESTINATIONS = {
-#     'aulas_video': {
-#         # REQUIRED
-#         'key': 'aulas_video',
-#     }
-# }
+
+# Autenticacao
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_URL = 'logout'

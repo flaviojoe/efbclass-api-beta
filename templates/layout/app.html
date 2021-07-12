@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+{% load static %}
+<!-- BEGIN: Head -->
+<head>
+    <meta charset="utf-8">
+    <link href="{% static 'dist/images/logo.svg' %}" rel="shortcut icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>eFBClass Instrutor</title>
+    <!-- BEGIN: CSS Assets-->
+    <link rel="stylesheet" href="{% static 'dist/css/app.css' %}"/>
+    <!-- END: CSS Assets-->
+</head>
+<!-- END: Head -->
+<body class="app">
+<!-- BEGIN: Mobile Menu -->
+{% include 'layout/menu_mobile.html' %}
+<!-- END: Mobile Menu -->
+<div class="flex">
+    <!-- BEGIN: Side Menu -->
+    {% include 'layout/menu.html' %}
+    <!-- END: Side Menu -->
+    <!-- BEGIN: Content -->
+    <div class="content">
+        <!-- BEGIN: Top Bar -->
+        <div class="top-bar">
+            <!-- BEGIN: Breadcrumb -->
+            <div class="-intro-x breadcrumb mr-auto hidden sm:flex">
+                <a href="" class="">Principal</a> <i data-feather="chevron-right" class="breadcrumb__icon"></i>
+                {% block breadcrumb %} {% endblock %}
+            </div>
+            {% include 'layout/topbar.html' %}
+        </div>
+        <!-- END: Top Bar -->
+        {% block container %} {% endblock %}
+        <!-- END: Content -->
+    </div>
+    <!-- BEGIN: JS Assets-->
+    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+    <script src="{% static 'dist/js/app.js' %}"></script>
+    <!-- END: JS Assets-->
+</body>
+</html>

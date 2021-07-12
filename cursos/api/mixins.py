@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
-from django.db.models import Prefetch
 from rest_framework import status
-from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from core.utils import respostaErro, respostaSucesso
 from .serializers.aulas import VideoAulaSerializers
-from .serializers.curso import CursoDetailsSerializers, CursoSerializers, CursosDoAlunoSerializers, \
-    MatriculaSerializers, MatriculaCreateSerializers
-from ..models import HistoricoAula, Aula, Matricula, Curso, Categoria
+from .serializers.curso import MatriculaSerializers, MatriculaCreateSerializers
+from ..models import HistoricoAula, Aula, Categoria
 
 
 class MatriculaViewSetMixin(object):
