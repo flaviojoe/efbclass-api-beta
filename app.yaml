@@ -1,0 +1,11 @@
+# [START runtime]
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT efbclass.wsgi
+
+beta_settings:
+    cloud_sql_instances: 'glass-arcana-320014:us-east1:efbclass-db-homo'
+
+runtime_config:
+  python_version: 3
+# [END runtime]

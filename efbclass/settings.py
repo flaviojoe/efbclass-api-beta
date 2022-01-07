@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Lendo configurações do .env
 env = environ.Env(DEBUG=(bool, False))
 # env_file = os.path.join(BASE_DIR, ".env.exemplo")
-env_file = os.path.join(BASE_DIR, ".env.dev")
+env_file = os.path.join(BASE_DIR, ".env")
 environ.Env.read_env(env_file)
 
 SECRET_KEY = env('SECRET_KEY')
@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
 
     # Pip
     'rest_framework',
@@ -148,13 +149,17 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATIC_URL = '/static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATIC_URL = 'https://storage.googleapis.com/efb-homo-drv01/'
+STATIC_ROOT = 'https://storage.googleapis.com/efb-homo-drv01/'
+
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = True
@@ -182,6 +187,9 @@ REST_FRAMEWORK = {
 
 if not RESTFRAMEWORK_NAVEGADOR_API:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = ('rest_framework.renderers.JSONRenderer',),
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Django Debug Toolbar
 if DEBUG and DEBUG_TOOLBAR:
@@ -226,6 +234,8 @@ if STORAGE_S3:
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_MAX_MEMORY_SIZE = 104857600
     # AWS_QUERYSTRING_AUTH = False
     # S3_USE_SIGV4 = True
     # AWS_S3_SIGNATURE_VERSION = 's3v4'
@@ -238,3 +248,14 @@ else:
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_URL = 'logout'
+
+# Google Cloud
+# from google.auth import compute_engine
+# from google.cloud import storage
+
+# credentials = compute_engine.Credentials()
+# GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+# GS_PROJECT_ID = env('GS_PROJECT_ID')
+# client = storage.Client(credentials=credentials, project=GS_PROJECT_ID)
+
+# STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
